@@ -1,5 +1,7 @@
 import { Writable } from '@/types';
 
+export type IVector2DTuple = [x: number, y: number];
+
 export interface IVector2D {
     readonly x: number;
     readonly y: number;
@@ -55,11 +57,21 @@ export class Vector2D implements IVector2D {
         return vector as Writable<IVector2D>;
     }
 
-    public static from(vector: IVector2D) {
-        if (vector instanceof Vector2D) {
-            return vector;
+    public static from(vector: IVector2D): Vector2D;
+    public static from(vector: IVector2DTuple): Vector2D;
+    public static from(...vector: IVector2DTuple): Vector2D;
+    public static from(...vector: IVector2DTuple | [IVector2DTuple] | [IVector2D]) {
+        const [x, y] = vector;
+        if (typeof y === 'number') {
+            return new Vector2D(x as number, y);
+        } else if (Array.isArray(x)) {
+            return new Vector2D(...x);
+        } else if (x instanceof Vector2D) {
+            return x;
+        } else {
+            const vector = x as IVector2D;
+            return new Vector2D(vector.x, vector.y);
         }
-        return new Vector2D(vector.x, vector.y);
     }
 
     public static absolute(vector: IVector2D) {

@@ -1,9 +1,10 @@
 import { Component } from '@/Component';
-import { Constructor } from '@/types';
+import { Constructor, Tuple } from '@/types';
 
-export class EntityMask<C extends Constructor<Component>[] = Constructor<Component>[]> {
+export class EntityMask<C extends Tuple<Constructor<Component>> = Tuple<Constructor<Component>>> {
     constructor(
-        // NOTE: [] is typed as never[], which is fine. but no idea why i cant cast it to C. see: https://github.com/Microsoft/TypeScript/issues/9976
+        // NOTE: [] is typed as never[], which is fine. but no idea why i cant cast it to C.
+        // see: https://github.com/Microsoft/TypeScript/issues/9976
         public mask: C = ([] as unknown as C),
     ) {}
 
@@ -21,7 +22,9 @@ export class EntityMask<C extends Constructor<Component>[] = Constructor<Compone
     }
 
     Matches(other: EntityMask) {
-        return this.mask.every(type => other.mask.includes(type));
+        return this.mask.every(type => other.mask.some((other) => {
+            return type === other || type.isPrototypeOf(other) || other.isPrototypeOf(type)
+        })) || false;
     }
 
     Copy() {

@@ -1,11 +1,15 @@
 import { Component, ComponentManager, components, HasComponentManagers } from '@/Component';
 import { Entity, EntityManager } from '@/Entity';
-import { EntityMask } from '@/Entity/EntityMask';
 import { EventBus } from '@/EventBus';
-import { IAwake, IDestroy } from '@/Lifecycle';
+import { IAwake, IDestroy, IRender, IUpdate } from '@/Lifecycle';
+import { Logger } from '@/Logger';
+import { Settings } from '@/Settings';
 import { System, systems } from '@/System';
-import { Delta, frame, now, Timestamp } from '@/Time';
-import { Constructor } from '@/types';
+import { benchmark, Delta, frame, now, Timestamp } from '@/Time';
+import { Constructor, MapToInstanceType, Tuple } from '@/types';
+import { asInt } from '@/util';
+
+const FPS60 = asInt(1000 / 60);
 
 /**
  * Singleton object responsible for housing the different components:
@@ -16,11 +20,22 @@ import { Constructor } from '@/types';
  * - [x] ECS
  */
 export class Game implements HasComponentManagers ,IAwake, IDestroy {
+    /**
+     * represents the last time the Loop was executed
+     */
     private timestamp: Timestamp = 0 as Timestamp;
-    public managers: ComponentManager<Component>[] = [];
-    public systems: System[] = [];
-    public eventbus: EventBus;
-    public entities: EntityManager;
+    /**
+     * represents the last time systems with a Render function were executed
+     */
+    private render: Delta = 0 as Delta;
+
+    managers: Tuple<ComponentManager<Component>[]> = [];
+    systems: System[] = [];
+    eventbus: EventBus;
+    entities: EntityManager;
+
+    private updateables: IUpdate[] = [];
+    private rendereables: IRender[] = [];
 
     constructor() {
         this.eventbus =  new EventBus();
@@ -32,12 +47,14 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
     }
 
     GetComponentManager<C extends Component | Constructor<Component>>(component: C) {
-        const check = typeof component === 'function' ? (type: Constructor<Component>) => component === type : (type: Constructor<Component>) => component instanceof type;
+        const check = typeof component === 'function' ?
+            (type: Constructor<Component>) => component === type || type.isPrototypeOf(component) :
+            (type: Constructor<Component>) => component instanceof type || type.isPrototypeOf(component.constructor);
         const manager = this.managers.find((manager) => check(manager.type));
         if (!manager) {
             throw new Error('no manager found for that component');
         }
-        return manager as C extends Constructor ? ComponentManager<InstanceType<C>> : ComponentManager<C>;
+        return manager as C extends Constructor ? ComponentManager<InstanceType<C>> : C extends Component ? ComponentManager<C> : never;
     }
 
     AddComponent<E extends Entity, C extends Component>(entity: E, component: C) {
@@ -66,9 +83,9 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
         });
     }
 
-    AddSystem<S extends System>(system: Constructor<S>) {
+    AddSystem<S extends System, A extends Tuple>(system: Constructor<S, A>) {
         // TODO: this part doesnt typecheck correctly so we add a length check to have at least the correct amount of arguments
-        const args = [this, this.eventbus];
+        const args = [this, this.eventbus] as A;
         if (args.length !== system.length) {
             throw new Error('system is not being supplied with the correct amount of arguments');
         }
@@ -83,14 +100,19 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
         return this.entities.DestroyEntity(entity);
     }
 
-    GetEntityComponents<E extends Entity, C extends Constructor<Component>[]>(entity: E, ...components: C) {
-        return components.map(component => this.GetComponentManager(component).Get(entity));
+    GetEntityComponents<E extends Entity, C extends Tuple<Constructor<Component>[]>>(entity: E, ...components: C) {
+        return components.map(component => this.GetComponentManager(component).Get(entity)) as C extends Tuple ? MapToInstanceType<C> : Component[];
     }
 
     Awake() {
-        components.forEach(component => {
-            // NOTE: have to typecast because of the different amount/types of arguments
-            this.AddComponentManager(component as Constructor<Component>);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                this.timestamp = now();
+            }
+        });
+
+        components.forEach((component: Constructor<Component>) => {
+            this.AddComponentManager(component);
         });
 
         systems.forEach(system => {
@@ -103,16 +125,45 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
         frame(timestamp => this.Loop(timestamp));
     }
 
+    /**
+     * Still adjusting this based on:
+     * - https://gafferongames.com/post/fix_your_timestep/
+     * - http://gameprogrammingpatterns.com/game-loop.html
+     */
     Loop(timestamp: Timestamp) {
-        // TODO: update on a steady interval
-        const delta = (timestamp - this.timestamp) as Delta;
-        this.systems.forEach(system => system.Update(delta));
+        // time between last RAF call and current time
+        let delta = (timestamp - this.timestamp) as Delta;
+        // how much ms this Loop iteration has left
+        let remaining = FPS60;
 
-        // TODO: render on a steady (slower) interval
-        // if update is taking to much time throttle the render call
-        this.systems.forEach(system => system.Render());
+        // if delta is bigger than some threshold, the Loop is taking to much time to execute
+        if (delta > FPS60 * 2) {
+            Logger.Warn(`Encountered Loop delta of ${delta}, limiting it to ${FPS60}`);
+            delta = FPS60 as Delta; // constrain the update delta to 60 fps
+        }
 
-        this.timestamp = timestamp;
+        // benchmark how much time the update call takes
+        const update = benchmark(() => {
+            this.systems.forEach(system => system.Update(delta));
+        });
+
+        if (update > remaining) {
+            // update took more time than we had available
+        }
+        remaining -= update;
+
+        // benchmark how much time the render call takes
+        const render = this.render = benchmark(() => {
+            this.systems.forEach(system => system.Render(delta));
+        });
+
+        if (render > remaining) {
+            // render took more time than we had available
+        }
+        remaining -= render;
+
+        // update the timestamp and request a new frame for the next Loop iteration
+        this.timestamp = now();
         frame(timestamp => this.Loop(timestamp));
     }
 

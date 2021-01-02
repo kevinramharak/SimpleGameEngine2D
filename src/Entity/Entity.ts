@@ -1,5 +1,6 @@
 import { Component, ComponentManager } from '@/Component';
 import { Game } from '@/Game';
+import { Tuple } from '@/types';
 import { Brand } from '@/types/Brand';
 import { EntityMask } from './EntityMask';
 
@@ -20,8 +21,16 @@ export class Entity {
     AddComponent<C extends Component>(component: C) {
         this.game.AddComponent(this, component);
     }
+    
+    AddComponents<C extends Tuple<Component>>(...components: C) {
+        components.forEach(component => this.AddComponent(component));
+    }
 
     RemoveComponent<C extends Component>(component: C) {
         return this.game.RemoveComponent(this, component);
+    }
+    
+    RemoveComponents<C extends Tuple<Component>>(...components: C) {
+        components.forEach(component => this.RemoveComponent(component));
     }
 }

@@ -5,21 +5,21 @@ import { EventBus, EventMap } from '@/EventBus';
 import { Game } from '@/Game';
 import { IAwake, IDestroy, IRender, IUpdate } from '@/Lifecycle';
 import { Delta } from '@/Time';
-import { Constructor } from '@/types';
+import { MapToConstructor, Tuple } from '@/types';
 
-export abstract class System<C extends Constructor<Component>[] = Constructor<Component>[]> implements IAwake, IUpdate, IDestroy, IRender {
+export abstract class System<C extends Tuple<Component> = Tuple<Component>> implements IAwake, IUpdate, IDestroy, IRender {
     protected entities: Entity[] = [];
     
     constructor(
         public readonly game: Game,
         public readonly eventbus: EventBus,
-        public readonly signature: EntityMask<C>,
+        public readonly signature: EntityMask<MapToConstructor<C>>,
     ) {}
 
     abstract Awake(): void;
     abstract Destroy(): void;
     Update(delta: Delta): void {}
-    Render(): void {}
+    Render(delta: Delta): void {}
 
     RegisterEntity<E extends Entity>(entity: E) {
         this.entities.push(entity);

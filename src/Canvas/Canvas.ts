@@ -76,6 +76,16 @@ export class Canvas {
         );
     }
 
+    public DrawImage(bitmap: ImageBitmap, source_position: IVector2D, source_size: IVector2D, destination_position: IVector2D, destination_size: IVector2D) {
+        this.context.drawImage(
+            bitmap,
+            source_position.x, source_position.y,
+            source_size.x, source_size.y,
+            destination_position.x, destination_position.y,
+            destination_size.x, destination_size.y,
+        )
+    }
+
     public TextMeasurement(text: string, font: Font) {
         this.context.font = font.toString();
         return this.context.measureText(text);

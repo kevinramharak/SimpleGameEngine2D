@@ -1,37 +1,35 @@
 import { Canvas } from '@/Canvas';
-import { Component } from '@/Component';
-import { Sprite } from '@/Component/Sprite';
+import { Color } from '@/Color';
+import { Render } from '@/Component/Render';
 import { Transform } from '@/Component/Transform';
 import { EntityMask } from '@/Entity/EntityMask';
-import { EventBus, EventMap } from '@/EventBus';
+import { EventBus } from '@/EventBus';
 import { Game } from '@/Game';
-import { Constructor, Writable } from '@/types';
+import { Logger } from '@/Logger';
+import { Delta } from '@/Time';
 import { System } from '../System';
 
-type RenderComponents = [Constructor<Transform>, Constructor<Sprite>];
-
-/**
- * Singleton object responsible for rendering the following components:
- * - RenderComponent
- */
-export class RenderEngine extends System<RenderComponents> {
+export class RenderEngine extends System<[Transform, Render]> {
     protected layers: [canvas: Canvas, clearOnUpdate: boolean][] = [];
+    protected map: Record<string, Canvas> = {};
 
     constructor(game: Game, eventbus: EventBus) {
         super(game, eventbus, new EntityMask([
             Transform,
-            Sprite,
-        ]));
+            Render,
+        ] as [typeof Transform, typeof Render]));
+        // NOTE: ugh, cant get rid of this cast. It sees it as (Transform | Sprite)[] and with const it sees it as readonly [typeof Transform, typeof Sprite]
     }
 
     Awake() {
-        const size = { x: 800, y: 600 };
-        this.AddLayer(new Canvas('foreground', size), true);
+        const size = { x: 400, y: 400 };
         this.AddLayer(new Canvas('background', size), false);
+        this.AddLayer(new Canvas('foreground', size), true);
+        const bg = this.GetLayer('background'); 
+        bg.FillRect({ x: 0, y: 0 }, bg.size, Color.Map.white);
     }
 
-
-    Render() {
+    Render(delta: Delta) {
         this.layers.forEach(([canvas, clearOnUpdate]) => {
             if (clearOnUpdate) {
                 canvas.ClearRect({ x: 0, y: 0 }, canvas.size);
@@ -39,6 +37,8 @@ export class RenderEngine extends System<RenderComponents> {
         });
         this.entities.forEach(entity => {
             const [transform, sprite] = this.game.GetEntityComponents(entity, ...this.signature.mask);
+            const layer = this.GetLayer(sprite.layer);
+            sprite.Render(delta, layer, transform);
         });
     }
 
@@ -49,6 +49,10 @@ export class RenderEngine extends System<RenderComponents> {
     AddLayer(canvas: Canvas, clearOnUpdate: boolean) {
         canvas.SetStyle({ zIndex: this.layers.length.toString() });
         this.layers.push([canvas, clearOnUpdate]);
+        if (!canvas.element.id) {
+            Logger.Error(new Error('Canvas layer has no id'));
+        }
+        this.map[canvas.element.id] = canvas;
     }
 
     GetLayer(id: string): Canvas;
@@ -60,11 +64,11 @@ export class RenderEngine extends System<RenderComponents> {
             }
             return this.layers[handle][0];
         } else {
-            const entry = this.layers.find(([canvas, _]) => canvas.id === handle);
+            const entry = this.map[handle];
             if (!entry) {
                 throw new Error('id not found');
             }
-            return entry[0];
+            return entry;
         }
     }
 }

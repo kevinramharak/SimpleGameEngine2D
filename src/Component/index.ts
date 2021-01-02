@@ -1,6 +1,7 @@
 
+import { AnimatedSprite } from './AnimatedSprite';
 import { Motion } from './Motion';
-import { Sprite } from './Sprite';
+import { Render } from './Render';
 import { Transform } from './Transform';
 
 export * from './Component';
@@ -9,6 +10,6 @@ export * from './HasComponentManagers';
 
 export const components = [
     Motion,
-    Sprite,
+    Render,
     Transform,
 ] as const;
