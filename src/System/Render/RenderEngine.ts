@@ -17,8 +17,7 @@ export class RenderEngine extends System<[Transform, Render]> {
         super(game, eventbus, new EntityMask([
             Transform,
             Render,
-        ] as [typeof Transform, typeof Render]));
-        // NOTE: ugh, cant get rid of this cast. It sees it as (Transform | Sprite)[] and with const it sees it as readonly [typeof Transform, typeof Sprite]
+        ]));
     }
 
     Awake() {
@@ -38,7 +37,7 @@ export class RenderEngine extends System<[Transform, Render]> {
         this.entities.forEach(entity => {
             const [transform, sprite] = this.game.GetEntityComponents(entity, ...this.signature.mask);
             const layer = this.GetLayer(sprite.layer);
-            sprite.Render(delta, layer, transform);
+            sprite.Render(delta, layer, transform.position);
         });
     }
 

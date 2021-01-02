@@ -13,7 +13,7 @@ const FPS60 = asInt(1000 / 60);
 
 /**
  * Singleton object responsible for housing the different components:
- * - [-] Render Engine
+ * - [x] Render Engine
  * - [ ] Physics Engine
  * - [ ] Audio Engine
  * - [x] Event Bus
@@ -33,9 +33,6 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
     systems: System[] = [];
     eventbus: EventBus;
     entities: EntityManager;
-
-    private updateables: IUpdate[] = [];
-    private rendereables: IRender[] = [];
 
     constructor() {
         this.eventbus =  new EventBus();
@@ -62,7 +59,9 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
         manager.Add(entity, component);
 
         const old = entity.mask.Copy();
-        entity.mask.Add(manager.type);
+        // NOTE: can't do this without a cast: https://github.com/microsoft/TypeScript/issues/3841
+        entity.mask.Add((component as any).constructor);
+
         this.systems.forEach(system => {
             if (system.signature.Matches(entity.mask) && !system.signature.Matches(old)) {
                 system.RegisterEntity(entity);
@@ -75,7 +74,9 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
         manager.Remove(entity);
         
         const old = entity.mask.Copy();
-        entity.mask.Remove(manager.type);
+        // NOTE: can't do this without a cast: https://github.com/microsoft/TypeScript/issues/3841
+        entity.mask.Remove((component as any).constructor);
+
         this.systems.forEach(system => {
             if (system.signature.Matches(old) && !system.signature.Matches(entity.mask)) {
                 system.DeregisterEntity(entity);
@@ -83,13 +84,8 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
         });
     }
 
-    AddSystem<S extends System, A extends Tuple>(system: Constructor<S, A>) {
-        // TODO: this part doesnt typecheck correctly so we add a length check to have at least the correct amount of arguments
-        const args = [this, this.eventbus] as A;
-        if (args.length !== system.length) {
-            throw new Error('system is not being supplied with the correct amount of arguments');
-        }
-        this.systems.push(new system(...args));
+    AddSystem(system: Constructor<System>) {
+        this.systems.push(new system(this, this.eventbus));
     }
 
     CreateEntity() {
@@ -105,6 +101,7 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
     }
 
     Awake() {
+        // TODO: unbind this on destroy
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 this.timestamp = now();

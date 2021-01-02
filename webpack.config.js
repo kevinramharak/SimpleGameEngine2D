@@ -48,9 +48,6 @@ module.exports = {
         new CleanWebpackPlugin(),
         new HtmlWebpackPlugin({
             template: `${path.join(__dirname, 'public')}/index.html`
-        }),
-        new ScriptExtHtmlWebpackPlugin({
-            defaultAttribute: 'defer'
         })
     ]
 }

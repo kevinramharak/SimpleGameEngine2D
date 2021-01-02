@@ -3,6 +3,11 @@ import { Transform } from './Component/Transform';
 import { Game } from './Game';
 import { AssetManager } from './AssetManager';
 import { ISpriteSheetData, SpriteSheet } from "./Sprite";
+import { Input } from './Component/Input';
+import { Motion } from './Component/Motion';
+import { Vector2D } from './Vector2D';
+import { Keyboard } from './Component/Keyboard';
+import { Control } from './Component/Control';
 
 const game = new Game();
 
@@ -66,10 +71,22 @@ document.addEventListener('readystatechange', () => {
         const animated = game.CreateEntity();
         manager.GetImage('/data/player.spritesheet.png').then(bitmap => {
             const spritesheet = new SpriteSheet(bitmap, spriteData);
-            const transform = new Transform(300, 300);
+            const transform = new Transform(Vector2D.from(300, 300));
             const sprite = new AnimatedSprite('foreground', spritesheet);
-            animated.AddComponents(transform, sprite);
+            const movement = [
+                new Input(),
+                new Motion(Vector2D.from(0, 0), Vector2D.from(0, 0)),
+            ];
+            const control = [
+                new Keyboard(),
+                new Control(),
+            ];
+            animated.AddComponents(transform, sprite,
+                ...movement,
+                ...control,
+            );
             sprite.SetState('idle');
         });
     }
 });
+
