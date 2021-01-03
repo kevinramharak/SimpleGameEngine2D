@@ -1,9 +1,10 @@
-
 import { Control } from './Control';
 import { Input } from './Input';
 import { Motion } from './Motion';
+import { Movement } from './Movement';
 import { Render } from './Render';
 import { Transform } from './Transform';
+
 
 export * from './Component';
 export * from './ComponentManager';
@@ -16,9 +17,10 @@ export * from './HasComponentManagers';
  * NOTE: but instead use the manager of the base class
  */
 export const components = [
+    Control,
+    Input,
     Motion,
+    Movement,
     Render,
     Transform,
-    Input,
-    Control,
 ] as const;

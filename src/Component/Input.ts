@@ -1,21 +1,30 @@
-import { Maybe } from '@/types';
 import { Component } from './Component';
 
-interface IAction {
-
+export interface IInputState {
+    left: boolean;
+    right: boolean;
+    up: boolean;
+    down: boolean;
+    attack: boolean;
+    jump: boolean;
 }
 
+/**
+ * @abstract
+ */
 export class Input extends Component {
-    actions: IAction[] = [];
+    state: IInputState = {
+        left: false,
+        right: false,
+        up: false,
+        down: false,
+        attack: false,
+        jump: false,
+    };
 
-    AddAction(action: IAction) {
-        this.actions.push(action);
-    }
-
-    RemoveAction(action: IAction): Maybe<IAction> {
-        const index = this.actions.indexOf(action);
-        if (index !== -1) {
-            return this.actions.splice(index, 1);
-        }
-    }
+    /**
+     * @abstract
+     * // TODO: figure out how to make this generic?
+     */
+    Receive(state: Record<string, boolean>) {}
 }

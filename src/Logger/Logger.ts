@@ -11,8 +11,10 @@ export class Logger {
         console.warn(`[WARN]  - `, ...args);
     }
 
-    static Error<A extends LogArgs>(error: Error, ...args: A) {
-        console.error(`[ERROR] - `, ...args);
+    static Error<A extends LogArgs>(error: Error, ...args: A): never {
+        if (args.length) {
+            console.error(`[ERROR] - `, ...args);
+        }
         throw error;
     }
 }

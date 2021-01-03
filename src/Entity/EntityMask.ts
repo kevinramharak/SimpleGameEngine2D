@@ -1,4 +1,5 @@
 import { Component } from '@/Component';
+import { Logger } from '@/Logger';
 import { Constructor, Tuple } from '@/types';
 
 export class EntityMask<C extends Tuple<Constructor<Component>> = Tuple<Constructor<Component>>> {
@@ -17,7 +18,7 @@ export class EntityMask<C extends Tuple<Constructor<Component>> = Tuple<Construc
         if (index !== -1) {
             this.mask.splice(index, 1);
         } else {
-            console.warn('tried to remove a component from a mask that did not include that component');
+            Logger.Error(new Error('tried to remove a component from a mask that did not include that component'));
         }
     }
 

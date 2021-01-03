@@ -25,16 +25,16 @@ export class AnimatedSprite extends Render {
         }
     }
 
-    Render(delta: Delta, layer: Canvas, position: IVector2D) {
+    Render(delta: Delta, layer: Canvas, position: IVector2D, size: IVector2D) {
         if (this.current) {
             this.delta = ((this.delta + delta) % this.current.duration) as Delta;
             const index = Math.floor(this.current.frames.length * (this.delta / this.current.duration));
             const frame = this.current.frames[index];
-            const size = Vector2D.from(this.sheet.data.width, this.sheet.data.height);
-            const sprite_position = Vector2D.from(size.x * frame.x, size.y * frame.y);
+            const sprite_size = Vector2D.from(this.sheet.data.width, this.sheet.data.height);
+            const sprite_position = Vector2D.from(sprite_size.x * frame.x, sprite_size.y * frame.y);
             layer.DrawImage(
                 this.sheet.bitmap,
-                sprite_position, size,
+                sprite_position, sprite_size,
                 position, size,
             );
         }

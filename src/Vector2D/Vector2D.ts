@@ -49,6 +49,18 @@ export class Vector2D implements IVector2D {
         return Vector2D.absolute(this);
     }
 
+    public floor() {
+        return Vector2D.floor(this);
+    }
+
+    public round() {
+        return Vector2D.round(this);
+    }
+
+    public limit(min: number, max: number) {
+        return Vector2D.limit(this, min, max);
+    }
+
     public static clone(vector: IVector2D) {
         return new Vector2D(vector.x, vector.y);
     }
@@ -76,6 +88,21 @@ export class Vector2D implements IVector2D {
 
     public static absolute(vector: IVector2D) {
         return new Vector2D(Math.abs(vector.x), Math.abs(vector.y));
+    }
+
+    public static floor(vector: IVector2D) {
+        return new Vector2D(Math.floor(vector.x), Math.floor(vector.y));
+    }
+
+    public static round(vector: IVector2D) {
+        return new Vector2D(Math.round(vector.x), Math.round(vector.y));
+    }
+
+    public static limit(vector: IVector2D, min: number, max: number) {
+        return new Vector2D(
+            vector.x < min ? min : vector.x > max ? max : vector.x,
+            vector.y < min ? min : vector.y > max ? max : vector.y,
+        )
     }
 
     public static add(lhs: IVector2D, rhs: IVector2D): IVector2D;

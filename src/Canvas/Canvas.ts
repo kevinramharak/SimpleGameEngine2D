@@ -83,7 +83,7 @@ export class Canvas {
             source_size.x, source_size.y,
             destination_position.x, destination_position.y,
             destination_size.x, destination_size.y,
-        )
+        );
     }
 
     public TextMeasurement(text: string, font: Font) {

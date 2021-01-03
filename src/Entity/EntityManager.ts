@@ -1,5 +1,6 @@
 import { Event, EventBus, EventMap } from '@/EventBus';
 import { Game } from '@/Game';
+import { Logger } from '@/Logger';
 import { Entity, EntityId } from './Entity';
 
 export class EntityManager {
@@ -34,7 +35,7 @@ export class EntityManager {
         if (index != -1) {
             this.entities.splice(index, 1);
         } else {
-            console.warn('tried to remove an entity that was not registered');
+            Logger.Error(new Error('tried to remove an entity that was not registered'));
         }
     }
 }

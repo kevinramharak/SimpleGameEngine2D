@@ -8,7 +8,7 @@ import { Component } from './Component';
 /**
  * @abstract
  */
-export class Render extends Component implements IRender<[Canvas, IVector2D]> {
+export class Render extends Component implements IRender<[layer: Canvas, position: IVector2D, size: IVector2D]> {
     constructor(
         public layer: 'background' | 'foreground',
     ) {
@@ -18,5 +18,5 @@ export class Render extends Component implements IRender<[Canvas, IVector2D]> {
     /**
      * @abstract 
      */
-    Render(delta: Delta, layer: Canvas, position: IVector2D): void {};
+    Render(delta: Delta, layer: Canvas, position: IVector2D, size: IVector2D): void {};
 }

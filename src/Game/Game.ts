@@ -44,12 +44,14 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
     }
 
     GetComponentManager<C extends Component | Constructor<Component>>(component: C) {
-        const check = typeof component === 'function' ?
+        const isConstructor = typeof component === 'function';
+        const check = isConstructor ?
             (type: Constructor<Component>) => component === type || type.isPrototypeOf(component) :
             (type: Constructor<Component>) => component instanceof type || type.isPrototypeOf(component.constructor);
         const manager = this.managers.find((manager) => check(manager.type));
         if (!manager) {
-            throw new Error('no manager found for that component');
+            const name = isConstructor ? (component as Constructor).name : component.constructor.name;
+            throw new Error(`no manager found for component: ${name}`);
         }
         return manager as C extends Constructor ? ComponentManager<InstanceType<C>> : C extends Component ? ComponentManager<C> : never;
     }
@@ -148,6 +150,11 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
             // update took more time than we had available
         }
         remaining -= update;
+
+        if (remaining < this.render) {
+            // last render benchmark is bigger than the time we have remaining
+            // could try and throttle pre-emtivly
+        }
 
         // benchmark how much time the render call takes
         const render = this.render = benchmark(() => {

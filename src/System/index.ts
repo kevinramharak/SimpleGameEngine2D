@@ -1,13 +1,23 @@
 import { RenderEngine } from './Render';
-import { ControlSystem } from './Control';
-import { PhysicsEngine } from './Physics';
 import { KeyboardSystem } from './Keyboard';
+import { PhysicsEngine } from './Physics';
+import { MovementSystem } from './Action';
 
 export * from './System';
 
+// TODO: fix this so the order does not matter
+// NOTE: right now we kind of want the input systems to be updated first, maybe use some kind of order filtering in Game?
 export const systems = [
-    ControlSystem,
+    // input
     KeyboardSystem,
-    RenderEngine,
+
+    // action
+    MovementSystem,
+
+    // physics
     PhysicsEngine,
+
+    // rendering
+    RenderEngine,
+
 ] as const;
