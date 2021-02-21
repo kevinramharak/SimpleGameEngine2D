@@ -1,7 +1,7 @@
 import { ISpriteSheetState } from './ISpriteSheetState';
 
 export interface ISpriteSheetData {
-    width: number;
-    height: number;
-    states: Record<string, ISpriteSheetState>;
+    readonly width: number;
+    readonly height: number;
+    readonly states: Record<string, ISpriteSheetState>;
 }

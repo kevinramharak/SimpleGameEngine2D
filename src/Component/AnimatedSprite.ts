@@ -30,8 +30,8 @@ export class AnimatedSprite extends Render {
             this.delta = ((this.delta + delta) % this.current.duration) as Delta;
             const index = Math.floor(this.current.frames.length * (this.delta / this.current.duration));
             const frame = this.current.frames[index];
-            const sprite_size = Vector2D.from(this.sheet.data.width, this.sheet.data.height);
-            const sprite_position = Vector2D.from(sprite_size.x * frame.x, sprite_size.y * frame.y);
+            const sprite_size = new Vector2D(this.sheet.data.width, this.sheet.data.height);
+            const sprite_position = new Vector2D(sprite_size.x * frame.x, sprite_size.y * frame.y);
             layer.DrawImage(
                 this.sheet.bitmap,
                 sprite_position, sprite_size,

@@ -2,6 +2,9 @@ import { Component } from '@/Component';
 import { Logger } from '@/Logger';
 import { Constructor, Tuple } from '@/types';
 
+/**
+ * TODO: refactor this to use bit operations instead of using prototypical inheritance checks
+ */
 export class EntityMask<C extends Tuple<Constructor<Component>> = Tuple<Constructor<Component>>> {
     constructor(
         // NOTE: [] is typed as never[], which is fine. but no idea why i cant cast it to C.

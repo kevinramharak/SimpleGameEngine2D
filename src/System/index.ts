@@ -1,7 +1,7 @@
 import { RenderEngine } from './Render';
 import { KeyboardSystem } from './Keyboard';
-import { PhysicsEngine } from './Physics';
-import { MovementSystem } from './Action';
+import { CollisionPhysics, MotionPhysics } from './Physics';
+import { MovementAction } from './Action';
 
 export * from './System';
 
@@ -12,10 +12,11 @@ export const systems = [
     KeyboardSystem,
 
     // action
-    MovementSystem,
+    MovementAction,
 
     // physics
-    PhysicsEngine,
+    CollisionPhysics,
+    MotionPhysics,
 
     // rendering
     RenderEngine,

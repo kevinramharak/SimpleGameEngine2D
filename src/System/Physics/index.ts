@@ -1,2 +1,3 @@
 
-export * from './PhysicsEngine';
+export * from './MotionPhysics';
+export * from './CollisionPhysics';

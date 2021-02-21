@@ -1,14 +1,10 @@
-/* eslint-disable no-undef */
-/* eslint-disable @typescript-eslint/no-var-requires */
-const path = require('path')
-const webpack = require('webpack')
-const {
-    CleanWebpackPlugin
-} = require('clean-webpack-plugin')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
-const ScriptExtHtmlWebpackPlugin = require('script-ext-html-webpack-plugin')
+import path from 'path';
+import webpack from 'webpack';
+import webpackDevServer from 'webpack-dev-server';
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 
-module.exports = {
+const config: webpack.Configuration = {
     entry: {
         app: `${path.join(__dirname, 'src')}/index.ts`
     },
@@ -20,8 +16,10 @@ module.exports = {
     module: {
         rules: [{
             test: /\.ts/,
-            use: 'ts-loader',
             exclude: /node_modules/,
+            use: {
+                loader: 'ts-loader',
+            }
         }, {
             test: /\.js$/,
             exclude: /(node_modules)/,
@@ -50,4 +48,6 @@ module.exports = {
             template: `${path.join(__dirname, 'public')}/index.html`
         })
     ]
-}
+};
+
+export default config;

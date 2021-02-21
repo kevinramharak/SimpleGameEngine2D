@@ -1,18 +1,16 @@
 import { asInt } from './util';
-
-/**
- * Calculates the interval to represent the `amount` of updates per seconds in milliseconds
- */
-function ups(amount: number) {
-    return asInt(1000 / amount);
-}
+import { Vector2D } from './Vector2D';
 
 export const Settings = ({
     debug: true,
     engines: {
-        render: {
-            ups: ups(30),
+        loop: {
+            ups: 30,
             warn: 5,
         },
+    },
+    Canvas: {
+        size: new Vector2D(400, 400),
+        scale: new Vector2D(4, 4),
     },
 } as const);

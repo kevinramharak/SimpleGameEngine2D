@@ -1,4 +1,4 @@
-import { Component, ComponentManager, components, HasComponentManagers } from '@/Component';
+import { Component, ComponentManager, components } from '@/Component';
 import { Entity, EntityManager } from '@/Entity';
 import { EventBus } from '@/EventBus';
 import { IAwake, IDestroy, IRender, IUpdate } from '@/Lifecycle';
@@ -9,7 +9,7 @@ import { benchmark, Delta, frame, now, Timestamp } from '@/Time';
 import { Constructor, MapToInstanceType, Tuple } from '@/types';
 import { asInt } from '@/util';
 
-const FPS60 = asInt(1000 / 60);
+const MAX_LOOP_DURATION = asInt(1000 / Settings.engines.loop.ups);
 
 /**
  * Singleton object responsible for housing the different components:
@@ -19,20 +19,41 @@ const FPS60 = asInt(1000 / 60);
  * - [x] Event Bus
  * - [x] ECS
  */
-export class Game implements HasComponentManagers ,IAwake, IDestroy {
+export class Game implements IAwake, IDestroy {
     /**
      * represents the last time the Loop was executed
      */
     private timestamp: Timestamp = 0 as Timestamp;
+
     /**
      * represents the last time systems with a Render function were executed
      */
     private render: Delta = 0 as Delta;
 
-    managers: Tuple<ComponentManager<Component>[]> = [];
-    systems: System[] = [];
-    eventbus: EventBus;
-    entities: EntityManager;
+    /**
+     *
+     */
+    private managers: ComponentManager<Component>[] = [];
+    
+    /**
+     * TODO: filter these into renderables and updatables to be slightly more effecient
+     */
+    private systems: System[] = [];
+
+    /**
+     * this bus should be passed on to each object that wants to pub/sub events
+     */
+    private eventbus: EventBus;
+
+    /**
+     *
+     */
+    private entities: EntityManager;
+
+    /**
+     *
+     */
+    private handlers: [target: EventTarget, event: string, handler: (event: Event) => void][] = [];
 
     constructor() {
         this.eventbus =  new EventBus();
@@ -90,8 +111,10 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
         this.systems.push(new system(this, this.eventbus));
     }
 
-    CreateEntity() {
-        return this.entities.CreateEntity(this);
+    CreateEntity<C extends Tuple<Component>>(...components: C) {
+        const entity = this.entities.CreateEntity(this);
+        entity.AddComponents(...components);
+        return entity;
     }
 
     DestroyEntity<E extends Entity>(entity: E) {
@@ -103,8 +126,7 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
     }
 
     Awake() {
-        // TODO: unbind this on destroy
-        document.addEventListener('visibilitychange', () => {
+        this.CreateListener(document, 'visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 this.timestamp = now();
             }
@@ -133,12 +155,12 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
         // time between last RAF call and current time
         let delta = (timestamp - this.timestamp) as Delta;
         // how much ms this Loop iteration has left
-        let remaining = FPS60;
+        let remaining = MAX_LOOP_DURATION;
 
         // if delta is bigger than some threshold, the Loop is taking to much time to execute
-        if (delta > FPS60 * 2) {
-            Logger.Warn(`Encountered Loop delta of ${delta}, limiting it to ${FPS60}`);
-            delta = FPS60 as Delta; // constrain the update delta to 60 fps
+        if (delta > MAX_LOOP_DURATION) {
+            Logger.Warn(`Encountered Loop delta of ${delta}, limiting it to ${MAX_LOOP_DURATION}`);
+            delta = MAX_LOOP_DURATION as Delta;
         }
 
         // benchmark how much time the update call takes
@@ -147,13 +169,12 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
         });
 
         if (update > remaining) {
-            // update took more time than we had available
+            Logger.Warn(`System::Update took ${update} of the remaining ${remaining}`)
         }
         remaining -= update;
 
         if (remaining < this.render) {
-            // last render benchmark is bigger than the time we have remaining
-            // could try and throttle pre-emtivly
+            Logger.Warn(`last render took ${this.render}, while the remaining is ${remaining}`)
         }
 
         // benchmark how much time the render call takes
@@ -163,15 +184,28 @@ export class Game implements HasComponentManagers ,IAwake, IDestroy {
 
         if (render > remaining) {
             // render took more time than we had available
+            Logger.Warn(`System::Render took ${render} of the remaining ${remaining}`)
         }
         remaining -= render;
+
+        if (remaining < 0) {
+            Logger.Warn(`System::Loop took more ${-remaining} than available`);
+        }
 
         // update the timestamp and request a new frame for the next Loop iteration
         this.timestamp = now();
         frame(timestamp => this.Loop(timestamp));
     }
 
+    CreateListener(target: EventTarget, event: string, handler: (event: Event) => void) {
+        this.handlers.push([target, event, handler]);
+        target.addEventListener(event, handler);
+    }
+
     Destroy() {
-        // systems.Destroy
+        this.systems.forEach(system => system.Destroy());
+        this.handlers.forEach(([target, event, handler]) => {
+            target.removeEventListener(event, handler);
+        });
     }
 }

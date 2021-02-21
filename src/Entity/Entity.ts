@@ -1,6 +1,6 @@
 import { Component, ComponentManager } from '@/Component';
 import { Game } from '@/Game';
-import { Tuple } from '@/types';
+import { Constructor, MapToConstructor, Tuple } from '@/types';
 import { Brand } from '@/types/Brand';
 import { EntityMask } from './EntityMask';
 
@@ -24,6 +24,14 @@ export class Entity {
     
     AddComponents<C extends Tuple<Component>>(...components: C) {
         components.forEach(component => this.AddComponent(component));
+    }
+
+    GetComponent<C extends Component>(component: Constructor<C>) {
+        return this.game.GetEntityComponents(this, component)[0];
+    }
+
+    GetComponents<C extends Tuple<Component>>(...components: MapToConstructor<C>) {
+        return this.game.GetEntityComponents(this, ...components);
     }
 
     RemoveComponent<C extends Component>(component: C) {

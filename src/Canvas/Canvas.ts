@@ -1,14 +1,17 @@
 import { IVector2D, Vector2D } from '@/Vector2D';
 import { Color } from '@/Color';
 import { Font } from '@/Font';
+import { Settings } from '@/Settings';
 
 export class Canvas {
     readonly element: HTMLCanvasElement;
     readonly context: CanvasRenderingContext2D;
+    // TODO: make these constructor parameters
+    readonly size = Settings.Canvas.size;
+    readonly scale = Settings.Canvas.scale;
 
     constructor(
         public readonly id: string,
-        public readonly size: IVector2D
     ) {
         this.element = document.createElement('canvas');
         this.element.id = this.id;
@@ -26,15 +29,12 @@ export class Canvas {
             throw new Error('failed creating a context');
         }
 
-        const factor = 2;
-        const scale = new Vector2D(factor, factor);
-
         // using this trick improves the rendering of text by a lot
         // see: https://stackoverflow.com/a/63804551
         // backing store buffer dimensions
-        this.element.width = this.size.x * scale.x;
-        this.element.height = this.size.y * scale.y;
-        this.context.scale(scale.x, scale.y);
+        this.element.width = this.size.x * this.scale.x;
+        this.element.height = this.size.y * this.scale.y;
+        this.context.scale(Settings.Canvas.scale.x, Settings.Canvas.scale.y);
 
         document.body.appendChild(this.element);
     }

@@ -2,11 +2,17 @@ import { Writable } from '@/types';
 
 export type IVector2DTuple = [x: number, y: number];
 
+/**
+ * represents a position on a 2D space
+ */
 export interface IVector2D {
     readonly x: number;
     readonly y: number;
 }
-
+/**
+ * TODO: remove function call overhead from code
+ * TODO: from() makes the code hard to reason about, because if the original was an object literal a new object reference will be returned. this could be fixed by replacing writable with clone?
+ */
 export class Vector2D implements IVector2D {
     constructor(
         public readonly x: number,
@@ -45,6 +51,10 @@ export class Vector2D implements IVector2D {
         return Vector2D.writable(this);
     }
 
+    public readonly() {
+        return Vector2D.readonly(this);
+    }
+
     public absolute() {
         return Vector2D.absolute(this);
     }
@@ -66,24 +76,11 @@ export class Vector2D implements IVector2D {
     }
 
     public static writable(vector: IVector2D) {
-        return vector as Writable<IVector2D>;
+        return Vector2D.clone(vector) as Writable<IVector2D>;
     }
 
-    public static from(vector: IVector2D): Vector2D;
-    public static from(vector: IVector2DTuple): Vector2D;
-    public static from(...vector: IVector2DTuple): Vector2D;
-    public static from(...vector: IVector2DTuple | [IVector2DTuple] | [IVector2D]) {
-        const [x, y] = vector;
-        if (typeof y === 'number') {
-            return new Vector2D(x as number, y);
-        } else if (Array.isArray(x)) {
-            return new Vector2D(...x);
-        } else if (x instanceof Vector2D) {
-            return x;
-        } else {
-            const vector = x as IVector2D;
-            return new Vector2D(vector.x, vector.y);
-        }
+    public static readonly(vector: Writable<IVector2D>) {
+        return vector as IVector2D;
     }
 
     public static absolute(vector: IVector2D) {
