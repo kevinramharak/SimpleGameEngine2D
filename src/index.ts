@@ -44,8 +44,8 @@ onDocumentReady(() => {
 
     function createBall(color: Color) {
         return game.CreateEntity(
-            new Transform({ x: random(100, 200), y: random(100, 200) }, { x: 20, y: 20 }),
-            new Motion({ x: 0, y: 0 }, { x: 0, y: 0 }),
+            new Transform({ x: random(100, 400), y: random(100, 400) }, { x: 20, y: 20 }),
+            new Motion({ x: 1, y: 1 }, { x: 0, y: 0 }),
             new RenderBall(color),
             new Gravity(1),
             new Collision(CollisionType.Circle),

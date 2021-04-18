@@ -5,12 +5,12 @@ export const Settings = ({
     debug: true,
     engines: {
         loop: {
-            ups: 30,
+            ups: 60,
             warn: 5,
         },
     },
     Canvas: {
         size: new Vector2D(400, 400),
-        scale: new Vector2D(4, 4),
+        scale: new Vector2D(1, 1),
     },
 } as const);
